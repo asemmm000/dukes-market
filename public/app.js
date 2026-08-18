@@ -334,26 +334,37 @@ function layoutSeatsIfNeeded(players) {
   const table = $('table');
   table.innerHTML = '';
   const n = players.length;
-  const rPct = 36;
-  players.forEach((p, i) => {
-    const angle = (2 * Math.PI / n) * i - Math.PI / 2;
-    const x = 50 + rPct * Math.cos(angle);
-    const y = 50 + rPct * Math.sin(angle);
+  const radiusMap = { 2:34, 3:36, 4:36, 5:37, 6:38 };
+  const rPct = radiusMap[n] || 36;
+
+  // ارسم المقاعد أولاً بدون left/top
+  const seats = players.map((p, i) => {
     const seat = document.createElement('div');
-    seat.className = `seat${p.id === myId ? ' me' : ''}${p.connected === false ? ' disconnected' : ''}`;
+    seat.className = ['seat', p.id === myId ? 'me' : '', p.connected === false ? 'disconnected' : '']
+      .filter(Boolean).join(' ');
     seat.id = `seat-${p.id}`;
-    seat.style.left = `calc(${x}% - ${clamp(36,48,9)}px)`;
-    seat.style.top  = `calc(${y}% - 38px)`;
     seat.innerHTML = `
-      <div class="avatar">🧑</div>
+      <div class="avatar">&#x1F9D1;</div>
       <div class="seat-name">${p.name}</div>
       <div class="seat-artifacts" id="sa-${p.id}"></div>
-      <div class="submitted-badge" style="display:none">✔</div>`;
+      <div class="submitted-badge" style="display:none">&#x2714;</div>`;
     table.appendChild(seat);
+    return { seat, i };
+  });
+
+  // بعد الرسم — اقرأ الأبعاد الحقيقية وطبّق الموضع
+  requestAnimationFrame(() => {
+    seats.forEach(({ seat, i }) => {
+      const angle  = (2 * Math.PI / n) * i - Math.PI / 2;
+      const xPct   = 50 + rPct * Math.cos(angle);
+      const yPct   = 50 + rPct * Math.sin(angle);
+      const halfW  = seat.offsetWidth  / 2;
+      const halfH  = seat.offsetHeight / 2;
+      seat.style.left = `calc(${xPct}% - ${halfW}px)`;
+      seat.style.top  = `calc(${yPct}% - ${halfH}px)`;
+    });
   });
 }
-
-function clamp(a, b, def) { return def || Math.round((a + b) / 2); }
 
 function renderSeatsData(players) {
   for (const p of players) {

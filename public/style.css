@@ -230,7 +230,7 @@ button.ghost-btn { background: transparent; border: 1.5px solid var(--gold-dark)
 
 .seat {
   position: absolute;
-  width: clamp(72px, 18%, 96px);
+  width: 96px;
   text-align: center;
   border-radius: 12px;
   padding: 6px 4px;
@@ -455,6 +455,7 @@ button.ghost-btn { background: transparent; border: 1.5px solid var(--gold-dark)
 @media (max-width: 480px) {
   :root { --card-w: 72px; --card-h: 102px; }
   .screen { padding: 10px 8px; }
+  .seat { width: 78px; }
   #table {
     width: 94vw;
     height: 94vw;
@@ -474,4 +475,5 @@ button.ghost-btn { background: transparent; border: 1.5px solid var(--gold-dark)
 @media (max-width: 360px) {
   :root { --card-w: 62px; --card-h: 88px; }
   h1 { font-size: 1.5rem; }
+  .seat { width: 68px; }
 }

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dukes Market | سوق الدوقات</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="screen-home" class="screen">
+    <div class="brand">
+      <h1>🏛️ Dukes Market</h1>
+      <p class="tagline">سوق الدوقات — مزايدة سرية، خيانة، وثروات مشبوهة</p>
+    </div>
+    <input id="nameInput" placeholder="اسمك">
+    <button id="btnCreate">إنشاء غرفة</button>
+    <div class="row">
+      <input id="codeInput" placeholder="رمز الغرفة">
+      <button id="btnJoin">انضمام</button>
+    </div>
+  </div>
+
+  <div id="screen-lobby" class="screen hidden">
+    <h2>غرفة Dukes Market: <span id="roomCode"></span></h2>
+    <ul id="playerList"></ul>
+    <button id="btnStart">ابدأ اللعبة</button>
+  </div>
+
+  <div id="screen-game" class="screen hidden">
+  <div id="artifactBox"></div>
+
+  <div id="timerWrap">
+    <div id="timerBar"><div id="timerFill"></div></div>
+    <span id="timerText">30ث</span>
+    <span id="submitCount"></span>
+  </div>
+
+  <!-- 👇 طاولة اللعب الدائرية للأنيميشن -->
+  <div id="table"></div>
+
+  <div class="panel">
+    <h3>💰 الميزانية: <span id="budgetDisplay">0</span></h3>
+    <label>مزايدة أساسية (0-10):</label>
+    <input type="number" id="bidInput" min="0" max="10" value="0">
+  </div>
+
+  <div class="panel">
+    <h3>🏦 بطاقة البنك</h3>
+    <div id="bankZone"></div>
+  </div>
+
+  <div class="panel">
+    <h3>💵 عزّز مزايدتك</h3>
+    <div id="moneyCardsZone"></div>
+    <p>إجمالي التعزيز: <span id="boostTotal">0</span></p>
+  </div>
+
+  <div class="panel">
+    <h3>🎭 بطاقة فعل (اختياري)</h3>
+    <select id="actionCardSelect"><option value="">بدون بطاقة</option></select>
+    <select id="targetSelect" class="hidden"></select>
+  </div>
+
+  <button id="btnSubmit">✅ تأكيد الجولة</button>
+  <div id="log"></div>
+</div>
+
+  <div id="screen-gameover" class="screen hidden">
+    <h2>النتائج النهائية</h2>
+    <ol id="finalList"></ol>
+  </div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

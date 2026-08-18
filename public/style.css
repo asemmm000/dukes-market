@@ -1,0 +1,96 @@
+body { background:#0f0d0a; color:#e8d9b5; font-family:'Cairo',sans-serif; text-align:center; }
+.hidden { display:none; }
+
+.brand h1 {
+  font-size: 2.4em;
+  background: linear-gradient(90deg, #ffd700, #b8860b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
+}
+.brand .tagline {
+  color: #a89568;
+  font-size: .9em;
+  margin-bottom: 20px;
+}
+
+button { background:#b8860b; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; margin:5px; color:#111; font-weight:bold;}
+button:disabled { opacity:.4; cursor:not-allowed; }
+input, select { padding:8px; border-radius:6px; border:1px solid #b8860b; background:#1a1712; color:#fff; margin:5px;}
+.panel { border:1px solid #3a3020; border-radius:10px; padding:10px; margin:10px auto; max-width:500px; }
+
+/* --- المؤقّت --- */
+#timerWrap { max-width:500px; margin:10px auto; display:flex; align-items:center; gap:10px; }
+#timerBar { flex:1; height:14px; background:#222; border-radius:7px; overflow:hidden; border:1px solid #b8860b; }
+#timerFill { height:100%; width:100%; background:linear-gradient(90deg,#ffd700,#b8860b); transition: width .1s linear, background .3s; }
+#timerFill.danger { background:linear-gradient(90deg,#ff4d4d,#a30000); }
+#timerText { min-width:45px; font-weight:bold; }
+#submitCount { font-size:.85em; opacity:.8; }
+
+/* --- الطاولة --- */
+#table {
+  position: relative;
+  width: 90vmin; max-width: 560px;
+  height: 90vmin; max-height: 560px;
+  margin: 15px auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2a2013 0%, #14100a 80%);
+  border: 4px solid #b8860b;
+  box-shadow: inset 0 0 40px #000;
+}
+
+.seat {
+  position: absolute;
+  width: 100px;
+  text-align: center;
+  transition: box-shadow .3s, transform .3s;
+  border-radius: 12px;
+  padding: 6px 2px;
+}
+.seat .avatar { font-size: 34px; }
+.seat .name { font-size: .8em; font-weight: bold; }
+.seat .budgetTag { font-size: .7em; color:#ffd700; }
+.seat .artifacts { font-size: 1.1em; min-height: 22px; }
+.seat.me { outline: 2px solid gold; border-radius: 12px; }
+
+/* حالات الأنيميشن على المقاعد */
+@keyframes winPulse {
+  0%,100% { box-shadow: 0 0 0px gold; }
+  50% { box-shadow: 0 0 25px 8px gold; }
+}
+.seat-win { animation: winPulse 0.9s ease-in-out 2; }
+
+@keyframes shakeRed {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+.seat-scam { animation: shakeRed .5s ease-in-out 2; box-shadow: 0 0 20px 5px #ff3333; }
+
+.seat-steal { animation: winPulse 0.6s ease-in-out 2; box-shadow: 0 0 20px 6px #ff8800; }
+.seat-steal-ninja { animation: winPulse 0.5s ease-in-out 2; box-shadow: 0 0 25px 8px #7c4dff; }
+
+@keyframes ghostFade {
+  0% { opacity:1; }
+  50% { opacity:.25; }
+  100% { opacity:1; }
+}
+.seat-ghost { animation: ghostFade 0.9s ease-in-out 2; filter: grayscale(0.6); }
+
+@keyframes allianceGlow {
+  0%,100% { box-shadow: 0 0 0 gold; }
+  50% { box-shadow: 0 0 20px 6px #4caf50; }
+}
+.seat-alliance { animation: allianceGlow 0.8s ease-in-out 2; }
+
+/* --- العنصر الطائر (القطعة أثناء السرقة) --- */
+.artifact-flyer {
+  position: fixed;
+  font-size: 30px;
+  z-index: 999;
+  pointer-events: none;
+  transition: transform 0.8s cubic-bezier(.25,.8,.25,1), opacity 0.8s;
+  filter: drop-shadow(0 0 6px #000);
+}

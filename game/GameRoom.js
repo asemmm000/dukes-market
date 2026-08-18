@@ -10,7 +10,8 @@ class GameRoom {
   constructor(code, hostId) {
     this.code = code;
     this.hostId = hostId;
-    this.players = new Map();
+    this.players = new Map();   // socketId -> player
+    this.tokenMap = new Map();  // 🔐 token -> socketId (للريكونكت)
     this.status = 'lobby';
     this.deck = [];
     this.discard = [];
@@ -22,10 +23,42 @@ class GameRoom {
   addPlayer(id, name) {
     if (this.players.size >= 6) throw new Error('الغرفة ممتلئة');
     if (this.status !== 'lobby') throw new Error('اللعبة بدأت بالفعل');
+    const token = require('crypto').randomBytes(16).toString('hex');
+    this.tokenMap.set(token, id);
     this.players.set(id, {
       id, name, connected: true,
       budget: STARTING_BUDGET, hand: [], artifacts: [],
+      token, // نحتفظ به للبحث العكسي
     });
+    return token;
+  }
+
+  // دالة جديدة: استبدال socketId بالـ token
+  reconnectPlayer(token, newSocketId) {
+    // إيجاد الـ token
+    const oldSocketId = this.tokenMap.get(token);
+    if (!oldSocketId) throw new Error('token غير صالح أو منتهي');
+    const player = this.players.get(oldSocketId);
+    if (!player) throw new Error('لاعب غير موجود');
+    if (player.connected) throw new Error('اللاعب متصل بالفعل');
+
+    // نقل البيانات للـ socket ID الجديد
+    player.id = newSocketId;
+    player.connected = true;
+    this.players.delete(oldSocketId);
+    this.players.set(newSocketId, player);
+    this.tokenMap.set(token, newSocketId);
+
+    // ترحيل إرسال الجولة الحالية إن وُجد (كان مربوطاً بالمعرّف القديم)
+    if (this.round && this.round.submissions[oldSocketId]) {
+      this.round.submissions[newSocketId] = this.round.submissions[oldSocketId];
+      delete this.round.submissions[oldSocketId];
+    }
+
+    // لو كان المضيف، حدّث hostId
+    if (oldSocketId === this.hostId) this.hostId = newSocketId;
+
+    return player;
   }
 
   removePlayer(id) {

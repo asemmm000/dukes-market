@@ -62,21 +62,53 @@ io.on('connection', (socket) => {
   socket.on('create_room', ({ name }, cb) => {
     try {
       const room = createRoom(socket.id, name || 'لاعب');
+      // createRoom يستدعي addPlayer داخلياً، نحتاج نعيد الـ token
+      const player = room.players.get(socket.id);
       socket.join(room.code);
-      cb({ ok: true, code: room.code });
+      cb?.({ ok: true, code: room.code, token: player.token }); // 🔐 نعيد token
       broadcastRoom(room);
-    } catch (e) { cb({ ok: false, error: e.message }); }
+    } catch (e) { cb?.({ ok: false, error: e.message }); }
   });
 
   socket.on('join_room', ({ code, name }, cb) => {
     try {
       const room = getRoom(code);
       if (!room) throw new Error('الغرفة غير موجودة');
-      room.addPlayer(socket.id, name || 'لاعب');
+      const token = room.addPlayer(socket.id, name || 'لاعب');
       socket.join(room.code);
-      cb({ ok: true, code: room.code });
+      cb?.({ ok: true, code: room.code, token }); // 🔐 نعيد token
       broadcastRoom(room);
-    } catch (e) { cb({ ok: false, error: e.message }); }
+    } catch (e) { cb?.({ ok: false, error: e.message }); }
+  });
+
+  // حدث جديد: إعادة الاتصال
+  socket.on('reconnect_game', ({ code, token }, cb) => {
+    try {
+      const room = getRoom(code);
+      if (!room) throw new Error('الغرفة غير موجودة أو انتهت');
+      const player = room.reconnectPlayer(token, socket.id);
+      socket.join(room.code);
+
+      // إرسال كل البيانات الخاصة بهذا اللاعب فوراً
+      socket.emit('private_state', {
+        budget: player.budget, hand: player.hand, artifacts: player.artifacts,
+      });
+
+      // إعادة إرسال حالة الجولة الحالية لو اللعبة شغّالة
+      if (room.status === 'playing' && room.round) {
+        socket.emit('reconnect_state', {
+          roomCode: room.code,
+          roundNumber: room.round.number,
+          artifact: room.round.artifact,
+          hasSubmitted: !!room.round.submissions[socket.id],
+          players: room.publicPlayers(),
+        });
+      }
+
+      cb?.({ ok: true, playerName: player.name });
+      broadcastRoom(room);
+      io.to(room.code).emit('player_reconnected', { name: player.name });
+    } catch (e) { cb?.({ ok: false, error: e.message }); }
   });
 
   socket.on('start_game', ({ code }, cb) => {
@@ -88,8 +120,8 @@ io.on('connection', (socket) => {
       broadcastRoom(room);
       sendPrivateHands(room);
       emitRoundStart(room, event.payload); // 👈 يبدأ المؤقّت هنا
-      cb({ ok: true });
-    } catch (e) { cb({ ok: false, error: e.message }); }
+      cb?.({ ok: true });
+    } catch (e) { cb?.({ ok: false, error: e.message }); }
   });
 
   socket.on('submit_turn', ({ code, baseBid, moneyCardUids, bankCardUid, actionCard }, cb) => {
@@ -101,17 +133,19 @@ io.on('connection', (socket) => {
       const submittedCount = Object.keys(room.round.submissions).length;
       const totalActive = room.activePlayers().length;
       io.to(room.code).emit('player_submitted', { playerId: socket.id, submittedCount, totalActive });
-      cb({ ok: true });
+      cb?.({ ok: true });
       if (allDone) resolveAndAdvance(room, false);
-    } catch (e) { cb({ ok: false, error: e.message }); }
+    } catch (e) { cb?.({ ok: false, error: e.message }); }
   });
 
   socket.on('disconnect', () => {
     for (const room of rooms.values()) {
       if (room.players.has(socket.id)) {
-        room.removePlayer(socket.id);
+        room.removePlayer(socket.id); // يضع connected: false فقط
         broadcastRoom(room);
-        // لو كل من تبقّى قد أرسل، نحل الجولة فوراً
+        io.to(room.code).emit('player_disconnected', {
+          name: room.players.get(socket.id)?.name,
+        });
         if (room.round && !room.round.resolved && room.allSubmitted()) {
           resolveAndAdvance(room, false);
         }
